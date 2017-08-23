@@ -6,7 +6,7 @@ import os
 import SyntaxValidator as sv
 
 ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ploDir = ploDir + '/PPTRangeConverter/'
+ploDir = ploDir + '/PPTParser/'
 retFile = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
 
