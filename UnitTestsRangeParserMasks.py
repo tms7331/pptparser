@@ -6,9 +6,9 @@ import os
 
 import SyntaxValidator as sv
 
-ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ploDir = ploDir + '/solver/'
-retFile = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
+#ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#ploDir = ploDir + '/solver/'
+#retFile = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
 import unittest
 import RangeParserMasks as rp
@@ -80,19 +80,28 @@ class testRangeParserMasks(unittest.TestCase):
                 print("BOARD NOT FOUND",board)
         '''
 
+        totalTrials = 5
         
-        '''
         for testDict in [dictFive,dictSix,dictSeven,dictEight]:  #[dictOne,dictTwo,dictThree,dictFour]:# ,dictFive,dictSix]:
             print("TestDict",[dictFive,dictSix,dictSeven,dictEight].index(testDict))
 
+            localTrials = 0
+
             for myKey in testDict:
+                print("MY KEY",myKey)
+                localTrials+=1
+
                 try:
                     rangeCards,rangeMask = rp.evaluate(myKey)
                     self.assertTrue(len(rangeCards)==testDict[myKey],msg="Range mismatch {} {} {}".format(myKey,len(rangeCards),testDict[myKey]))
                 except:
                     print("Failed on",myKey)
                     #raise NameError("Failed on",myKey)
-        '''
+
+                #End testing this dict once we reach the limit
+                if localTrials==totalTrials:
+                    break
+
         
 
     def testParadigmDict(self):
