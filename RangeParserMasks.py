@@ -11,13 +11,13 @@ retFile = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
 
 ### FIXIT - don't want these variables here
-allRanks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-allRankVars = ['R','O','N','P']
+ALLRANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+ALLRANKVARS = ['R','O','N','P']
 
 #allSuits = ['c','s','d','h']
-#allSuitVars = ['w','x','y','z']
-allSuits = ['C','S','D','H']
-allSuitVars = ['W','X','Y','Z']
+#ALLSUITVARS = ['w','x','y','z']
+ALLSUITS = ['C','S','D','H']
+ALLSUITVARS = ['W','X','Y','Z']
 
 patternDict = {
 'NO':'NO','WN':'WN','WX':'WX','NN':'NN','WW':'WW','WXY':'WXY','NNW':'NN','NWO':'NO','WNW':'WW','WNX':'WX','NNN':'NNN','NNO':'NNO','WNN':'NN',
@@ -91,7 +91,7 @@ class ExpressionParser:
         return value
     
     #Return the next character
-    def peek(self):
+    def next(self):
         try:
             currChar = self.expList[self.index]
             return currChar
@@ -110,7 +110,7 @@ class ExpressionParser:
         cValues = [self.parseColon()]
         
         while True:
-            char = self.peek()
+            char = self.next()
 
             if char == ',':
                 self.index += 1
@@ -129,7 +129,7 @@ class ExpressionParser:
         negValues = []
 
         while True:
-            char = self.peek()
+            char = self.next()
             if char == ':':
                 self.index += 1
                 #valTwo = self.parseParenthesis()
@@ -155,12 +155,12 @@ class ExpressionParser:
         return allPos
     
     def parseParenthesis(self):
-        char = self.peek()
+        char = self.next()
 
         if char == '(':
             self.index += 1
             value = self.parseCommas()
-            #if self.peek() != ')':
+            #if self.next() != ')':
                 #raise Exception("No closing parenthesis found at character "+ str(self.index))
             self.index += 1
             return value
@@ -168,11 +168,12 @@ class ExpressionParser:
             return self.parseRange()
     
     def parseRange(self):
-        char = self.peek()
+        char = self.next()
 
         self.index += 1
 
         return expandRange(char,self.filterArray)
+
 
 
 def cleanExpression(exp):
@@ -302,8 +303,8 @@ def makeBoardMask(board):
 def bracketHandler(bString):
     #There can be only one of the above, so we just have to find which one and evaluate it
 
-    allRanks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-    allSuits = ['C','S','D','H']
+    #allRanks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+    #allSuits = ['C','S','D','H']
 
     #Handle ',' case - We want to find these and convert to ; in pre-processing
     if ';' in bString:
@@ -321,7 +322,7 @@ def bracketHandler(bString):
             else:
 
                 #This is the case where we have a rank, need to add suit
-                if char in allRanks:
+                if char in ALLRANKS:
                     ssList.append(char+"?")
                 #Otherwise it must be a suit
                 else:
@@ -347,9 +348,9 @@ def bracketHandler(bString):
             return [bString]
         
         #Otherwise length is 1, we need to see if we have a suit or a rank
-        elif len(bString)==1 and bString in allRanks:
+        elif len(bString)==1 and bString in ALLRANKS:
             return [bString+"?"]
-        elif len(bString)==1 and bString in allSuits:
+        elif len(bString)==1 and bString in ALLSUITS:
             return ["*"+bString]
 
 
@@ -372,7 +373,7 @@ def cleanString(st):
         if len(hv) == 2:
             myHandList.append(hv)
         elif len(hv) == 1:
-            if hv in allRanks or hv in allRankVars:
+            if hv in ALLRANKS or hv in ALLRANKVARS:
                 myHandList.append(hv+"?")
             else:
                 myHandList.append("*"+hv)
@@ -509,10 +510,10 @@ def enumerateHands(plainStr):
     modVals = [x for x in handVals if len(x)==1]
     
     #Modify ones containing just a suit
-    appVals1 = [[x+"?"] for x in modVals if x in allRanks or x in allRankVars]
+    appVals1 = [[x+"?"] for x in modVals if x in ALLRANKS or x in ALLRANKVARS]
 
     #Modify ones containing just a rank
-    appVals2 = [["*"+x] for x in modVals if x in allSuits or x in allSuitVars]
+    appVals2 = [["*"+x] for x in modVals if x in ALLSUITS or x in ALLSUITVARS]
 
     #Finally combine all the lists
     finalVals = finalVals + appVals1 + appVals2
@@ -617,12 +618,12 @@ def buildMask(brackCombos,plainCombos,startMask):
     possArrays = [(1,2,3),(1,2,4),(1,2,5),(1,2,6)]
     handArry = None
 
-    allRanks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-    allSuits = ['C','S','D','H']
-    rList = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
-    rvList = ['R','O','N','P']
-    sList = ['C','S','D','H']
-    svList = ['W','X','Y','Z']
+    #allRanks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+    #allSuits = ['C','S','D','H']
+    #rList = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
+    #rvList = ['R','O','N','P']
+    #sList = ['C','S','D','H']
+    #svList = ['W','X','Y','Z']
     useRIDict = {'R':[],'O':[],'N':[],'P':[]}  #{R:[1,2] , O:[3]}
     useSIDict = {'W':[],'X':[],'Y':[],'Z':[]}
 
@@ -704,22 +705,17 @@ def buildMask(brackCombos,plainCombos,startMask):
                 subHandCleaned = [x.replace("R","*").replace("O","*").replace("N","*").replace("P","*") for x in subHand]
                 subHandCleaned = [x for x in subHandCleaned if x!='*?']
                 myPattern = findPatternSimple(subHandCleaned)
-
-                #2. Search the dictionary for this pattern, find the file to load and load it
-                #myPattern will be a string
-                myPattern = patternDict[myPattern]
-                #FIXIT - want os.curr path here
-                parMask = np.load(ploDir+'npfiles/'+myPattern+'.npy')
-
-
             else:
                 #1. Apply our conversion patternSimple function to find the pattern
                 myPattern = findPatternSimple(subHand)
-                #2. Search the dictionary for this pattern, find the file to load and load it
-                #myPattern will be a string
-                myPattern = patternDict[myPattern]
-                #FIXIT - want os.curr path here
-                parMask = np.load(ploDir+'npfiles/'+myPattern+'.npy')
+
+            #2. Search the dictionary for this pattern, find the file to load and load it
+            #myPattern will be a string
+            myPattern = patternDict[myPattern]
+            #FIXIT - want os.curr path here
+            parMask = np.load(ploDir+'npfiles/'+myPattern+'.npy')
+
+
         else:
             parMask = np.ones(270725,dtype='bool')
 
@@ -809,12 +805,38 @@ def pctHandler(r, startMask):
     if '6H' in r:
         #parMask = np.load(ploDir+'/npfiles/'+myPattern+'.npy')
         orderedList = np.load(ploDir+'npfiles/pptRanked6maxMap.npy')
-        sIndexes = [0, 2700, 5400, 8118, 10818, 13536, 16224, 18948, 21648, 24344, 27072, 29772, 32486, 35188, 37900, 40608, 43308, 46008, 48726, 51416, 54140, 56842, 59558, 62266, 64960, 67672, 70386, 73090, 75798, 78492, 81206, 83916, 86614, 89320, 92040, 94732, 97452, 100148, 102864, 105564, 108284, 110990, 113699, 116405, 119115, 121817, 124521, 127229, 129937, 132639, 135351, 138059, 140775, 143483, 146189, 148887, 151599, 154295, 157007, 159711, 162421, 165125, 167833, 170549, 173245, 175959, 178675, 181385, 184093, 186781, 189507, 192199, 194915, 197607, 200327, 203035, 205751, 208449, 211151, 213865, 216571, 219277, 221979, 224695, 227403, 230093, 232813, 235525, 238231, 240935, 243639, 246339, 249059, 251757, 254465, 257185, 259889, 262589, 265305, 268014, 270725]
+        sIndexes = [0, 2700, 5400, 8118, 10818, 13536, 16224, 18948, 21648, 
+                    24344, 27072, 29772, 32486, 35188, 37900, 40608, 43308, 
+                    46008, 48726, 51416, 54140, 56842, 59558, 62266, 64960, 
+                    67672, 70386, 73090, 75798, 78492, 81206, 83916, 86614, 
+                    89320, 92040, 94732, 97452, 100148, 102864, 105564, 108284,
+                    110990, 113699, 116405, 119115, 121817, 124521, 127229, 
+                    129937, 132639, 135351, 138059, 140775, 143483, 146189, 
+                    148887, 151599, 154295, 157007, 159711, 162421, 165125, 
+                    167833, 170549, 173245, 175959, 178675, 181385, 184093, 
+                    186781, 189507, 192199, 194915, 197607, 200327, 203035, 
+                    205751, 208449, 211151, 213865, 216571, 219277, 221979, 
+                    224695, 227403, 230093, 232813, 235525, 238231, 240935, 
+                    243639, 246339, 249059, 251757, 254465, 257185, 259889, 
+                    262589, 265305, 268014, 270725]
 
     else:
         #Don't actually need to load the hand rankings otherwise
         #orderedList = np.load('C:/Users/Thomas/Dropbox/Workspace/GTOPoker/ArrayCalcsSets/rankedHU.npy')
-        sIndexes = [0, 2688, 5412, 8112, 10806, 13518, 16234, 18942, 21654, 24346, 27068, 29762, 32466, 35188, 37892, 40600, 43312, 46022, 48724, 51430, 54144, 56846, 59548, 62248, 64966, 67676, 70382, 73088, 75792, 78492, 81198, 83903, 86611, 89323, 92041, 94739, 97449, 100149, 102865, 105559, 108289, 110985, 113685, 116389, 119101, 121821, 124525, 127237, 129927, 132643, 135341, 138059, 140767, 143479, 146183, 148883, 151603, 154293, 157013, 159713, 162423, 165133, 167833, 170553, 173257, 175961, 178655, 181379, 184083, 186797, 189507, 192213, 194921, 197627, 200327, 203041, 205733, 208441, 211151, 213859, 216561, 219283, 221985, 224687, 227391, 230115, 232819, 235523, 238229, 240939, 243651, 246347, 249057, 251769, 254469, 257169, 259885, 262597, 265309, 268001, 270725]
+        sIndexes = [0, 2688, 5412, 8112, 10806, 13518, 16234, 18942, 21654, 
+                    24346, 27068, 29762, 32466, 35188, 37892, 40600, 43312, 
+                    46022, 48724, 51430, 54144, 56846, 59548, 62248, 64966, 
+                    67676, 70382, 73088, 75792, 78492, 81198, 83903, 86611, 
+                    89323, 92041, 94739, 97449, 100149, 102865, 105559, 108289,
+                    110985, 113685, 116389, 119101, 121821, 124525, 127237, 
+                    129927, 132643, 135341, 138059, 140767, 143479, 146183, 
+                    148883, 151603, 154293, 157013, 159713, 162423, 165133, 
+                    167833, 170553, 173257, 175961, 178655, 181379, 184083, 
+                    186797, 189507, 192213, 194921, 197627, 200327, 203041, 
+                    205733, 208441, 211151, 213859, 216561, 219283, 221985, 
+                    224687, 227391, 230115, 232819, 235523, 238229, 240939, 
+                    243651, 246347, 249057, 251769, 254469, 257169, 259885, 
+                    262597, 265309, 268001, 270725]
 
     if '-' in r:
         pcts = re.findall(r'(\d{1,3})%',r)

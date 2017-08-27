@@ -80,7 +80,7 @@ class testRangeParserMasks(unittest.TestCase):
                 print("BOARD NOT FOUND",board)
         '''
 
-        totalTrials = 5
+        totalTrials = 3
         
         for testDict in [dictFive,dictSix,dictSeven,dictEight]:  #[dictOne,dictTwo,dictThree,dictFour]:# ,dictFive,dictSix]:
             print("TestDict",[dictFive,dictSix,dictSeven,dictEight].index(testDict))
@@ -95,7 +95,7 @@ class testRangeParserMasks(unittest.TestCase):
                     rangeCards,rangeMask = rp.evaluate(myKey)
                     self.assertTrue(len(rangeCards)==testDict[myKey],msg="Range mismatch {} {} {}".format(myKey,len(rangeCards),testDict[myKey]))
                 except:
-                    print("Failed on",myKey)
+                    print("Failed on",myKey, len(rangeCards), testDict[myKey])
                     #raise NameError("Failed on",myKey)
 
                 #End testing this dict once we reach the limit
