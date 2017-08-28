@@ -10,14 +10,13 @@ ploDir = ploDir + '/PPTParser/'
 retFile = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
 
-### FIXIT - don't want these variables here
 ALLRANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']
 ALLRANKVARS = ['R','O','N','P']
 
-#allSuits = ['c','s','d','h']
-#ALLSUITVARS = ['w','x','y','z']
 ALLSUITS = ['C','S','D','H']
 ALLSUITVARS = ['W','X','Y','Z']
+
+
 
 patternDict = {
 'NO':'NO','WN':'WN','WX':'WX','NN':'NN','WW':'WW','WXY':'WXY','NNW':'NN','NWO':'NO','WNW':'WW','WNX':'WX','NNN':'NNN','NNO':'NNO','WNN':'NN',
@@ -292,6 +291,15 @@ def makeBoardMask(board):
 
 
 ###############################################
+
+
+class Range:
+    def __init__(self):
+        #Main card array, used several times so make things more effective by loading once
+        self.cardArray = getCardArray()
+
+
+
 
 
 
@@ -1173,6 +1181,11 @@ def expandRivers(exp):
 
 
         return list((set(rivList)))
+
+
+
+
+
 
 
 
