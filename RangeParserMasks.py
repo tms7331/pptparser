@@ -786,6 +786,8 @@ def buildMask(brackCombos,plainCombos,startMask):
 
                 #if np.sum(parMask) != currTotal:
                     #print("New total",subHand)
+
+            #Want to remove this - only check if necessary
             if True:
 
                 strArray = np.load(ploDir+'npfiles/pptRankedHUstrs.npy')
@@ -1622,6 +1624,150 @@ def maskConstants(cardArray,parMask,fullList,realCards):
 
 
 
+
+
+def step2VarMatchingConditionA(realCards, subArray, rankValsA, rankValsB, remRankC):
+
+    #Count the total number of this rank and have that be the minimum number to filter for
+    #rankValsA = [x for x in realCards[:52] if r1 in x]
+    #rankValsB = [x for x in realCards[:52] if r2 in x]
+    #Get rid of the ones we can't have
+    #rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
+    #rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
+    # rankValsA = [realCards.index(x)+1 for x in realCards[:52] if r1 in x]
+    # rankValsB = [realCards.index(x)+1 for x in realCards[:52] if r2 in x]
+    # #Apply our mask
+    # maskA = (subArray==rankValsA[0])|(subArray==rankValsA[1])|(subArray==rankValsA[2])|(subArray==rankValsA[3])
+    # maskB = (subArray==rankValsB[0])|(subArray==rankValsB[1])|(subArray==rankValsB[2])|(subArray==rankValsB[3])
+    # #Get rid of any suits we can't have
+    # impossMask = np.zeros_like(subArray,dtype='bool')
+    # for iv in impossSuits:
+    #     #Get the suit vals we'll filter for
+    #     suitVals = [realCards.index(x)+1 for x in realCards[:52] if iv in x]
+    #     #Apply our mask
+    #     maskS = (subArray>=min(suitVals))&(subArray<=max(suitVals))
+    #     impossMask = np.logical_or(impossMask,maskS)
+    # #Combine this impossible filter with each ouf our rank masks
+    #impossMask = np.logical_not(impossMask)
+    #maskA = np.logical_and(impossMask,maskA)
+    #maskB = np.logical_and(impossMask,maskB)
+
+    rankValsA = [x for x in realCards[:52] if r1 in x]
+    rankValsB = [x for x in realCards[:52] if r2 in x]
+    #Get rid of the ones we can't have
+    rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
+    rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
+    rankValsA = [realCards.index(x)+1 for x in rankValsA]
+    rankValsB = [realCards.index(x)+1 for x in rankValsB]
+
+    totMask = np.zeros(len(subArray),dtype='bool')
+    for li,cardV in enumerate(rankValsA):
+        subMask = (subArray==cardV)|(subArray==rankValsB[li])
+        subSum = np.sum(subMask,axis=1)
+        hit = subSum==2
+        totMask = np.logical_or(totMask,hit)
+
+
+    #Finally add it to our reduce mask
+    reduceMask = np.logical_and(reduceMask,totMask)
+
+    return reduceMask
+
+def step2VarMatchingConditionB(realCards, subArray, rankValsA, rankValsB, remRankC):
+
+    rankValsA = [x for x in realCards[:52] if r1 in x]
+    rankValsB = [x for x in realCards[:52] if r2 in x]
+    #Get rid of the ones we can't have
+    rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
+    rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
+    rankValsA = [realCards.index(x)+1 for x in rankValsA]
+    rankValsB = [realCards.index(x)+1 for x in rankValsB]
+
+    #print(rankValsA)
+
+    allMaskedVals = np.zeros_like(subArray,dtype='bool')
+    totMask = np.zeros(len(subArray),dtype='bool')
+    for li,cardV in enumerate(rankValsA):
+        subMask = (subArray==cardV)|(subArray==rankValsB[li])
+        allMaskedVals = np.logical_or(allMaskedVals,subMask)
+
+        subSum = np.sum(subMask,axis=1)
+        suitedHit = subSum==2
+        totMask = np.logical_or(totMask,suitedHit)
+
+    #Our unsuited values are anywhere the allMaskedVals array sum equals 3, OR the totMask is false
+    fullArraySum = np.sum(allMaskedVals,axis=1)
+    unsuitedThree = fullArraySum>=3
+
+    notSuited = np.logical_not(totMask)
+
+    addMask = np.logical_or(notSuited,unsuitedThree)
+
+    #print("Adding",np.sum(addMask))
+    #Finally add it to our reduce mask
+    reduceMask = np.logical_and(reduceMask,addMask)
+
+    return reduceMask
+
+def step2VarMatchingConditionC(realCards, subArray, rankValsA, rankValsB, remRankC):
+
+
+    rankValsA = [x for x in realCards[:52] if s1 in x]
+    rankValsB = [x for x in realCards[:52] if s2 in x]
+    #Get rid of the ones we can't have
+    rankValsA = [x for x in rankValsA if any(z in x for z in remRankC)]
+    rankValsB = [x for x in rankValsB if any(z in x for z in remRankC)]
+    rankValsA = [realCards.index(x)+1 for x in rankValsA]
+    rankValsB = [realCards.index(x)+1 for x in rankValsB]
+
+    totMask = np.zeros(len(subArray),dtype='bool')
+    for li,cardV in enumerate(rankValsA):
+        subMask = (subArray==cardV)|(subArray==rankValsB[li])
+        subSum = np.sum(subMask,axis=1)
+        hit = subSum==2
+        totMask = np.logical_or(totMask,hit)
+
+    #Finally add it to our reduce mask
+    reduceMask = np.logical_and(reduceMask,totMask)
+
+    return reduceMask
+
+def step2VarMatchingConditionD(realCards, subArray, rankValsA, rankValsB, remRankC):
+
+
+
+    rankValsA = [x for x in realCards[:52] if s1 in x]
+    rankValsB = [x for x in realCards[:52] if s2 in x]
+    #Get rid of the ones we can't have
+    rankValsA = [x for x in rankValsA if any(z in x for z in remRankC)]
+    rankValsB = [x for x in rankValsB if any(z in x for z in remRankC)]
+    rankValsA = [realCards.index(x)+1 for x in rankValsA]
+    rankValsB = [realCards.index(x)+1 for x in rankValsB]
+
+
+    allMaskedVals = np.zeros_like(subArray,dtype='bool')
+    totMask = np.zeros(len(subArray),dtype='bool')
+    for li,cardV in enumerate(rankValsA):
+        subMask = (subArray==cardV)|(subArray==rankValsB[li])
+        allMaskedVals = np.logical_or(allMaskedVals,subMask)
+
+        subSum = np.sum(subMask,axis=1)
+        suitedHit = subSum==2
+        totMask = np.logical_or(totMask,suitedHit)
+
+    #Our unsuited values are anywhere the allMaskedVals array sum equals 3, OR the totMask is false
+    fullArraySum = np.sum(allMaskedVals,axis=1)
+    unsuitedThree = fullArraySum>=3
+
+    notSuited = np.logical_not(totMask)
+
+    addMask = np.logical_or(notSuited,unsuitedThree)
+
+    #Finally add it to our reduce mask
+    reduceMask = np.logical_and(reduceMask,addMask)
+
+    return reduceMask
+
 #Go over list, try to filter for each individual pair set to match up all the vars
 def step2VarMatching(cardArray,parMask,fullList,realCards):
 
@@ -1755,50 +1901,7 @@ def step2VarMatching(cardArray,parMask,fullList,realCards):
         if (r1 in rankC and s1 in suitV and r2 in rankC and s2==s1):
             #print(myCombo, "AxKx")
 
-            #Count the total number of this rank and have that be the minimum number to filter for
-            #rankValsA = [x for x in realCards[:52] if r1 in x]
-            #rankValsB = [x for x in realCards[:52] if r2 in x]
-            #Get rid of the ones we can't have
-            #rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
-            #rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
-            # rankValsA = [realCards.index(x)+1 for x in realCards[:52] if r1 in x]
-            # rankValsB = [realCards.index(x)+1 for x in realCards[:52] if r2 in x]
-            # #Apply our mask
-            # maskA = (subArray==rankValsA[0])|(subArray==rankValsA[1])|(subArray==rankValsA[2])|(subArray==rankValsA[3])
-            # maskB = (subArray==rankValsB[0])|(subArray==rankValsB[1])|(subArray==rankValsB[2])|(subArray==rankValsB[3])
-            # #Get rid of any suits we can't have
-            # impossMask = np.zeros_like(subArray,dtype='bool')
-            # for iv in impossSuits:
-            #     #Get the suit vals we'll filter for
-            #     suitVals = [realCards.index(x)+1 for x in realCards[:52] if iv in x]
-            #     #Apply our mask
-            #     maskS = (subArray>=min(suitVals))&(subArray<=max(suitVals))
-            #     impossMask = np.logical_or(impossMask,maskS)
-            # #Combine this impossible filter with each ouf our rank masks
-            #impossMask = np.logical_not(impossMask)
-            #maskA = np.logical_and(impossMask,maskA)
-            #maskB = np.logical_and(impossMask,maskB)
-
-            rankValsA = [x for x in realCards[:52] if r1 in x]
-            rankValsB = [x for x in realCards[:52] if r2 in x]
-            #Get rid of the ones we can't have
-            rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
-            rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
-            rankValsA = [realCards.index(x)+1 for x in rankValsA]
-            rankValsB = [realCards.index(x)+1 for x in rankValsB]
-
-            totMask = np.zeros(len(subArray),dtype='bool')
-            for li,cardV in enumerate(rankValsA):
-                subMask = (subArray==cardV)|(subArray==rankValsB[li])
-                subSum = np.sum(subMask,axis=1)
-                hit = subSum==2
-                totMask = np.logical_or(totMask,hit)
-
-
-            #Finally add it to our reduce mask
-            reduceMask = np.logical_and(reduceMask,totMask)
-
-
+            reduceMask = step2VarMatchingConditionA(realCards, subArray, rankValsA, rankValsB, remRankC)
 
         # AxKy
         # Filter for A, filter for K.  Separate filters.
@@ -1810,106 +1913,20 @@ def step2VarMatching(cardArray,parMask,fullList,realCards):
             #print(myCombo, "AxKy")
             #print("AxKy",myCombo)
 
-            rankValsA = [x for x in realCards[:52] if r1 in x]
-            rankValsB = [x for x in realCards[:52] if r2 in x]
-            #Get rid of the ones we can't have
-            rankValsA = [x for x in rankValsA if any(z in x for z in remSuitC)]
-            rankValsB = [x for x in rankValsB if any(z in x for z in remSuitC)]
-            rankValsA = [realCards.index(x)+1 for x in rankValsA]
-            rankValsB = [realCards.index(x)+1 for x in rankValsB]
-
-            #print(rankValsA)
-
-            allMaskedVals = np.zeros_like(subArray,dtype='bool')
-            totMask = np.zeros(len(subArray),dtype='bool')
-            for li,cardV in enumerate(rankValsA):
-                subMask = (subArray==cardV)|(subArray==rankValsB[li])
-                allMaskedVals = np.logical_or(allMaskedVals,subMask)
-
-                subSum = np.sum(subMask,axis=1)
-                suitedHit = subSum==2
-                totMask = np.logical_or(totMask,suitedHit)
-
-            #Our unsuited values are anywhere the allMaskedVals array sum equals 3, OR the totMask is false
-            fullArraySum = np.sum(allMaskedVals,axis=1)
-            unsuitedThree = fullArraySum>=3
-
-            notSuited = np.logical_not(totMask)
-
-            addMask = np.logical_or(notSuited,unsuitedThree)
-
-            #print("Adding",np.sum(addMask))
-            #Finally add it to our reduce mask
-            reduceMask = np.logical_and(reduceMask,addMask)
-
-
-
-
-
+            reduceMask = step2VarMatchingConditionB(realCards, subArray, rankValsA, rankValsB, remRankC)
 
         # RcRd
         # Same as previous.  Filter for c,d.  Combine the masks, iterate over 55,66,77,88 and
         # look for a hit of 2.
         elif (r1 in rankV and s1 in suitC and r2==r1 and s2 in suitC):
             #print(myCombo, "RcRd")
+            reduceMask = step2VarMatchingConditionC(realCards, subArray, rankValsA, rankValsB, remRankC)
 
-            rankValsA = [x for x in realCards[:52] if s1 in x]
-            rankValsB = [x for x in realCards[:52] if s2 in x]
-            #Get rid of the ones we can't have
-            rankValsA = [x for x in rankValsA if any(z in x for z in remRankC)]
-            rankValsB = [x for x in rankValsB if any(z in x for z in remRankC)]
-            rankValsA = [realCards.index(x)+1 for x in rankValsA]
-            rankValsB = [realCards.index(x)+1 for x in rankValsB]
-
-            totMask = np.zeros(len(subArray),dtype='bool')
-            for li,cardV in enumerate(rankValsA):
-                subMask = (subArray==cardV)|(subArray==rankValsB[li])
-                subSum = np.sum(subMask,axis=1)
-                hit = subSum==2
-                totMask = np.logical_or(totMask,hit)
-
-            #Finally add it to our reduce mask
-            reduceMask = np.logical_and(reduceMask,totMask)
-
-
-
-        
         # RcOd
         #
         elif (r1 in rankV and s1 in suitC and r2 in rankV and s2 in suitC):
             #print(myCombo, "RcOd")
-
-
-            rankValsA = [x for x in realCards[:52] if s1 in x]
-            rankValsB = [x for x in realCards[:52] if s2 in x]
-            #Get rid of the ones we can't have
-            rankValsA = [x for x in rankValsA if any(z in x for z in remRankC)]
-            rankValsB = [x for x in rankValsB if any(z in x for z in remRankC)]
-            rankValsA = [realCards.index(x)+1 for x in rankValsA]
-            rankValsB = [realCards.index(x)+1 for x in rankValsB]
-
-
-            allMaskedVals = np.zeros_like(subArray,dtype='bool')
-            totMask = np.zeros(len(subArray),dtype='bool')
-            for li,cardV in enumerate(rankValsA):
-                subMask = (subArray==cardV)|(subArray==rankValsB[li])
-                allMaskedVals = np.logical_or(allMaskedVals,subMask)
-
-                subSum = np.sum(subMask,axis=1)
-                suitedHit = subSum==2
-                totMask = np.logical_or(totMask,suitedHit)
-
-            #Our unsuited values are anywhere the allMaskedVals array sum equals 3, OR the totMask is false
-            fullArraySum = np.sum(allMaskedVals,axis=1)
-            unsuitedThree = fullArraySum>=3
-
-            notSuited = np.logical_not(totMask)
-
-            addMask = np.logical_or(notSuited,unsuitedThree)
-
-            #Finally add it to our reduce mask
-            reduceMask = np.logical_and(reduceMask,addMask)
-
+            reduceMask = step2VarMatchingConditionD(realCards, subArray, rankValsA, rankValsB, remRankC)
 
 
     parMask[parMask] = reduceMask
