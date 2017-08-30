@@ -171,8 +171,112 @@ class ExpressionParser:
 
         self.index += 1
 
-        return expandRange(char,self.filterArray)
+        return self.expandRange(char,self.filterArray)
 
+
+    #Take in a range and an optional startMask
+    def expandRange(self, r,startMask=None):
+        # Order -
+        # Check for %, handle them
+        # Check for brackets, handle them   z = re.findall('\[(.+?)\]',test)
+        # Check for {}, handle them
+        # Check for +, -
+
+        # +
+        # -
+        # []
+        # xxyy
+        # RROONN
+
+        #preloadedArrays = ['*']  #,'**','***','****','XXYY','XXYZ','RR','RRON']
+        macroList = ['$0G','$1G','$2G','$3B10I','$3B10O','$3B12I','$3B12O','$3B15I','$3B15O','$3B2I','$3B2O','$3B4I',
+                     '$3B4O','$3B6I','$3B6O','$3B8I','$3B8O','$4B2','$4B3','$4B4','$4B5','$4B6','$FI12','$FI15',
+                     '$FI20','$FI25','$FI30','$FI40','$FI50']
+
+
+        if r in macroList:
+            retSet = loadMask(r, startMask)
+            return retSet
+        
+
+
+        #Handle pct - if we have this it's the only value we can have
+        if '%' in r:
+            retSet = pctHandler(r, startMask)
+            #FIXIT - need to account for 5%-10%
+            #myR = set(fullList[:pct])
+            #return myR
+            return retSet
+
+        else:
+            #Need to check other conditions
+
+            #Store the sets of possible hand combos here, then run combinatorics at end
+            brackCombos = []
+
+            #handle brackets - can have this plus other conditions, need to check for this first
+            bracketList = re.findall(r'\[(.+?)\]',r)
+            if bracketList:
+                for bracketSet in bracketList:
+                    listA = bracketHandler(bracketSet)
+                    brackCombos.append(listA)
+
+            #Check for {}, handle them
+            bracesList = re.findall(r'\{(.+?)\}',r)
+            if bracesList:
+                pass
+
+            #Check for + outside of braces, and when there are no brackets
+            if len(bracketList) == 0 and '+' in r:
+                #print("Line 627, in first loop")
+                listC = plusHandler(r)
+                brackCombos.append(listC)
+
+            elif len(bracketList) == 0 and '-' in r:
+                listD = minusHandler(r)
+                brackCombos.append(listD)
+
+
+            #We can set this to whatever characters are left
+            plainStr = ''
+
+            #If we have regular characters outside of brackets, or all alone, put them in plainStr
+            #Can have [78]J, [78+]J
+            #If we have brackets, remove the characters in the brackets (and the brackets)
+            if bracketList:
+                plainStr = r
+                for bracketSet in bracketList:
+                    r = r.replace('['+bracketSet+']','')
+
+                    #And also confirm there is no + or - before we know it's a plain string
+                    if "+" not in r and "-" not in r:
+                        plainStr = cleanString(r)
+                
+            #If we don't have brackets, confirm no + or - and we know it's a plain string
+            elif len(bracketList) == 0:
+                if "+" not in r and "-" not in r:
+                    plainStr = cleanString(r)
+
+            plainCombos = []
+            #If we have any remaining characters, add them to our list
+            if len(plainStr) > 0:
+                #So plainLists will need to be a list of lists
+                plainLists = enumerateHands(plainStr)
+                plainCombos += plainLists
+
+            #print(brackCombos,plainCombos)
+
+            retSet = buildMask(brackCombos,plainCombos,startMask)
+            
+            
+            #return retSet
+            #return (len(retSet))
+            #return retSet.sum()
+            return retSet
+            '''
+            handSet = enumerateHands(allCombos, plainStr)
+            return handSet
+            '''
 
 
 def cleanExpression(exp):
@@ -973,109 +1077,6 @@ def loadMask(myMacro, startMask):
 
 
 
-#Take in a range and an optional startMask
-def expandRange(r,startMask=None):
-    # Order -
-    # Check for %, handle them
-    # Check for brackets, handle them   z = re.findall('\[(.+?)\]',test)
-    # Check for {}, handle them
-    # Check for +, -
-
-    # +
-    # -
-    # []
-    # xxyy
-    # RROONN
-
-    #preloadedArrays = ['*']  #,'**','***','****','XXYY','XXYZ','RR','RRON']
-    macroList = ['$0G','$1G','$2G','$3B10I','$3B10O','$3B12I','$3B12O','$3B15I','$3B15O','$3B2I','$3B2O','$3B4I',
-                 '$3B4O','$3B6I','$3B6O','$3B8I','$3B8O','$4B2','$4B3','$4B4','$4B5','$4B6','$FI12','$FI15',
-                 '$FI20','$FI25','$FI30','$FI40','$FI50']
-
-
-    if r in macroList:
-        retSet = loadMask(r, startMask)
-        return retSet
-    
-
-
-    #Handle pct - if we have this it's the only value we can have
-    if '%' in r:
-        retSet = pctHandler(r, startMask)
-        #FIXIT - need to account for 5%-10%
-        #myR = set(fullList[:pct])
-        #return myR
-        return retSet
-
-    else:
-        #Need to check other conditions
-
-        #Store the sets of possible hand combos here, then run combinatorics at end
-        brackCombos = []
-
-        #handle brackets - can have this plus other conditions, need to check for this first
-        bracketList = re.findall(r'\[(.+?)\]',r)
-        if bracketList:
-            for bracketSet in bracketList:
-                listA = bracketHandler(bracketSet)
-                brackCombos.append(listA)
-
-        #Check for {}, handle them
-        bracesList = re.findall(r'\{(.+?)\}',r)
-        if bracesList:
-            pass
-
-        #Check for + outside of braces, and when there are no brackets
-        if len(bracketList) == 0 and '+' in r:
-            #print("Line 627, in first loop")
-            listC = plusHandler(r)
-            brackCombos.append(listC)
-
-        elif len(bracketList) == 0 and '-' in r:
-            listD = minusHandler(r)
-            brackCombos.append(listD)
-
-
-        #We can set this to whatever characters are left
-        plainStr = ''
-
-        #If we have regular characters outside of brackets, or all alone, put them in plainStr
-        #Can have [78]J, [78+]J
-        #If we have brackets, remove the characters in the brackets (and the brackets)
-        if bracketList:
-            plainStr = r
-            for bracketSet in bracketList:
-                r = r.replace('['+bracketSet+']','')
-
-                #And also confirm there is no + or - before we know it's a plain string
-                if "+" not in r and "-" not in r:
-                    plainStr = cleanString(r)
-            
-        #If we don't have brackets, confirm no + or - and we know it's a plain string
-        elif len(bracketList) == 0:
-            if "+" not in r and "-" not in r:
-                plainStr = cleanString(r)
-
-        plainCombos = []
-        #If we have any remaining characters, add them to our list
-        if len(plainStr) > 0:
-            #So plainLists will need to be a list of lists
-            plainLists = enumerateHands(plainStr)
-            plainCombos += plainLists
-
-        #print(brackCombos,plainCombos)
-
-        retSet = buildMask(brackCombos,plainCombos,startMask)
-        
-        
-        #return retSet
-        #return (len(retSet))
-        #return retSet.sum()
-        return retSet
-        '''
-        handSet = enumerateHands(allCombos, plainStr)
-        return handSet
-        '''
 
 
 
