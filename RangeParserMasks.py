@@ -710,13 +710,10 @@ def findPatternSimple(hand='AcQhJsTd'):
 
 
 def getCardArray():
-    cardArray = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
-    # try:
-    #     retFile = np.load(ploDir+'/npfiles/pptRankedHUnums.npy')
-    # except:
-    #     #Domino format
-    #     retFile = np.load('npfiles/pptRankedHUnums.npy')
-    return cardArray
+    '''
+    Return numpy array containing our ordered list of hands
+    '''
+    return np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
 
 
