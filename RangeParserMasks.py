@@ -906,11 +906,16 @@ def buildMask(brackCombos,plainCombos,startMask):
 
 
 
-#Takes in an array with a percentage, loads appropriate array and returns value
 def pctHandler(r, startMask):
+    '''
+    Inputs: r is a string of a percentage
+    Four cases - 3%, 3%6h, 30%-50%, 30%-50%6h
 
-    #Four cases
-    #3%, 3%6h, 30%-50%, 30%-50%6h
+    startMask is an optional parameter of hands that are known to be impossible
+
+    Returns array with the hands represented by this string
+    '''
+    
     pctMask = np.zeros(270725,dtype='bool')
 
     if '6H' in r:
