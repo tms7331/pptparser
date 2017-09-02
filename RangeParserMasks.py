@@ -352,11 +352,13 @@ def evaluate(expression,board=None,rangeFilter=None):
         return False
 
 
-#def returnBoardMask(board):
-#    return makeBoardMask(board)
-
 
 def makeBoardMask(board):
+    '''
+    Input is a board string, in format '2H5HTDJC'
+    Output is a mask representing the values in our basic hand array that are
+    blocked by the cards on this board
+    '''
     cardArray = getCardArray()
 
     board=board.upper()
