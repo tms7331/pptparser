@@ -495,10 +495,15 @@ def cleanString(st):
     return ''.join([x for x in myHandList])
 
 
-#Convert any sequence with a + in it.  There can only be one, multiple would have to be separated in brackets
-#5+
-#5s6s+
+
+
 def plusHandler(pString):
+    '''
+    Input is some string containing a +, such as 55+, 7s8s+
+    Output is an enumerated list of the matches for this range, such as 55, 66, 77, etc
+
+    Will only be a single string with a single +, multiple would be separated in different brackets
+    '''
     #Increment each card in the list by 1 until we have a value equal to A
     convDict = {'A':13,'K':12,'Q':11,'J':10,'T':9,'9':8,'8':7,'7':6,'6':5,'5':4,'4':3,'3':2,'2':1}
     bConvDict = {13:'A',12:'K',11:'Q',10:'J',9:'T',8:'9',7:'8',6:'7',5:'6',4:'5',3:'4',2:'3',1:'2'}
