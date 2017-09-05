@@ -469,14 +469,13 @@ def bracketHandler(bString):
 
 
 
-#Take in a string in any format, 1-8 characters, any combination of suits and ranks.
-#Fill in all missing characters with *  and ?
-#If 'extend' is True, we'll additional characters to extend it to 8, otherwise leave it as is?
-#AKs
-#*s
+
 def cleanString(st):
-    #Can we create a regEx to pull out each word?
-    #handVals = re.findall('[AKQJT98765432RON]?[csdhwxyz]?',st)
+    '''
+    Input is a string, 1-8 characters, any combination of suits and ranks.
+    Output is length 8 string with all missing suits/ranks filled in with * and ?
+    '''
+
     handVals = re.findall('[AKQJT98765432RONP]?[CSDHWXYZ]?',st)
     handVals = handVals[:-1]  #Always has empty value at end for some reason
 
