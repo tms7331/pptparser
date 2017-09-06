@@ -620,8 +620,13 @@ def minusHandler(mString):
 
 
 
-#Return a list of lists of whatever characters are left over
+
 def enumerateHands(plainStr):
+    '''
+    Input is a string of up to four cards, wildcards possible, examples are AcKd, Acc, K**
+    Output is a list of strings representing each card, with a wildcard filling in any missing values
+    '''
+    
     #Split our hands into separate values in a string
     handVals = re.findall('[AKQJT98765432RONP]?[CSDHWXYZ]?',plainStr)
     handVals = handVals[:-1]  #Always has empty value at end for some reason
