@@ -626,7 +626,7 @@ def enumerateHands(plainStr):
     Input is a string of up to four cards, wildcards possible, examples are AcKd, Acc, K**
     Output is a list of strings representing each card, with a wildcard filling in any missing values
     '''
-    
+
     #Split our hands into separate values in a string
     handVals = re.findall('[AKQJT98765432RONP]?[CSDHWXYZ]?',plainStr)
     handVals = handVals[:-1]  #Always has empty value at end for some reason
@@ -649,7 +649,11 @@ def enumerateHands(plainStr):
 
 
 def findPatternSimple(hand='AcQhJsTd'):
-    #h = hand.upper()
+    '''
+    Input is a string of cards
+    Output is a pattern representing a key from our patternDict, such as WWXY
+    '''
+
     ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2','R','O','N','P']
     suits = ['C','S','D','H','W','X','Y','Z']
 
