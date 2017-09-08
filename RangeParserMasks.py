@@ -736,8 +736,12 @@ def getCardArray():
 
 
 
-#Takes in a list of list of possible hands, returns a numpy mask of the hands that are possible
+
 def buildMask(brackCombos,plainCombos,startMask):
+    '''
+    Input is up to two lists of lists of possible hands and a startMask
+    Output is a numpy mask of the hands that are possible
+    '''
 
     #cardArray = np.load('C:/Users/Thomas/Dropbox/Workspace/GTOPoker/rankedHandsHUNum.npy')
     cardArray = getCardArray()
