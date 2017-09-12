@@ -2,6 +2,7 @@ import itertools
 import re
 import numpy as np
 import os
+import time
 
 
 import SyntaxValidator as sv
@@ -91,8 +92,12 @@ class testRangeParserMasks(unittest.TestCase):
                 print("MY KEY",myKey)
                 localTrials+=1
 
+                start_time = time.time()
+
                 try:
                     rangeCards,rangeMask = rp.evaluate(myKey)
+                    if int(time.time()-start_time)>0:
+                        print("TIME TAKEN",int(time.time()-start_time))
                     self.assertTrue(len(rangeCards)==testDict[myKey],msg="Range mismatch {} {} {}".format(myKey,len(rangeCards),testDict[myKey]))
                 except:
                     print("Failed on",myKey, len(rangeCards), testDict[myKey])
