@@ -20,12 +20,17 @@ cardIndexes = ['2H','3H','4H','5H','6H','7H','8H','9H','TH','JH','QH','KH','AH',
                '2S','3S','4S','5S','6S','7S','8S','9S','TS','JS','QS','KS','AS']
 ```
 
-The function will also return a mask of the hands that were found, hands are matched against the pptRankedHUnums.npy file.  This mask enables quicker calculations of subranges, for example instead of typing AA:xxyz, if you already had the mask for xxyz saved in the variable 'myMask', you could call `evaluate('AA',None,myMask), and this use the known information about the 'xxyz' range and calculate 'AA:xxyz'
+The function will also return a mask of the hands that were found, hands are matched against the pptRankedHUnums.npy file.  This mask enables quicker calculations of subranges, for example instead of typing AA:xxyz, if you already had the mask for xxyz saved in the variable 'myMask', you could call `evaluate('AA',None,myMask)`, and this use the known information about the 'xxyz' range and calculate 'AA:xxyz'
 
-### Issues
+### Inconsistencies with ProPokerTools ranges
 
-Certain ranges involving wildcard characters (such as RxOx[AcJc-Ac7c]) are very slow to parse.
+In rare cases where I believe ProPokerTools is inconsistent with their syntax, different ranges will be returned by this program.
+
+Two examples:
+`[2c,3c,4c,5c,6c]xxx` will return AcKcQc2c, while `[2c-6c]xxx` will not include that hand.  Given that the general case is for suit variables to match with bracketed ranges, in both situations AcKcQc2c will not be included here.
+
+`[33-]RR` will include 2222, while `[22-]RR` will not include that hand.  The general behavior is for rank variables to not match with bracketed ranges, so in both cases 2222 would be returned here.
 
 ### License
 
-Released under the MIT license
+Released under the MIT license.

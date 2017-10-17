@@ -9,7 +9,7 @@ ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ploDir = ploDir + '/PPTParser/'
 RANKEDHUARRAY = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
 
-arr = np.load(ploDir+'pptSeparateRankSuit.npy')
+arr = np.load(ploDir+'npfiles/pptSeparateRankSuit.npy')
 
 
 ALLRANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
