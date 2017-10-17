@@ -11,13 +11,15 @@ def confirmHR(exp):
         else:
             return False
 
+    #print("EXP IS",exp)
     #Go through different syntax possible, find which category this exp is in and make sure it's valid
     if '$' in exp:
+        #print("SEARCHING MACRO LIST")
         #macroList = ['$DS','$SS','$NP','$OP','$TP','$NT','$0G','$1G','$2G','$B','$M','$Z','$L','$N','$F','$R','$W']
         macroList = ['$0G','$1G','$2G','$3B10I','$3B10O','$3B12I','$3B12O','$3B15I','$3B15O','$3B2I','$3B2O','$3B4I',
                      '$3B4O','$3B6I','$3B6O','$3B8I','$3B8O','$4B2','$4B3','$4B4','$4B5','$4B6','$FI12','$FI15',
                      '$FI20','$FI25','$FI30','$FI40','$FI50']
-
+        #print("LOOKING FOR",exp.upper())
         if exp.upper() in macroList:
             return True
         else:
@@ -386,7 +388,8 @@ def cleanExpression(exp):
     myExp = myExp.replace('$Z', '[6-2]')
     myExp = myExp.replace('$L', '[A,2,3,4,5,6,7,8]')
     myExp = myExp.replace('$N', '[K-9]')
-    myExp = myExp.replace('$F', '[K-J]')
+    myExp = myExp.replace('$F', '[K-J]')  #Problematic - replaces $FI hands
+    myExp = myExp.replace('[K-J]I', '$FI')  #Hacky solution - replace it back if there's an I
     myExp = myExp.replace('$R', '[A-T]')
     myExp = myExp.replace('$W', '[A,2,3,4,5]')
     
@@ -403,7 +406,46 @@ def cleanExpression(exp):
     return myExp
 
 
+#From our other script
+def cleanExpressionOLD(exp):
+    #Get rid of whitespace and capitalize
+    myExp = exp.replace(" ", "")
+    myExp = myExp.upper()
 
+    #Replace macros
+    myExp = myExp.replace('$DS', ':XXYY')
+    myExp = myExp.replace('$SS', ':XXYZ')
+    myExp = myExp.replace('$NP', '!RR')
+    myExp = myExp.replace('$OP', ':RRON')
+    myExp = myExp.replace('$TP', ':RROO')
+    myExp = myExp.replace('$NT', '!RRR')
+    #FIXIT!!  Once we build these arrays, delete and no longer replace these values
+    # myExp = myExp.replace('$0G', 'AKQJ-')  #No longer want to replace these values
+    # myExp = myExp.replace('$1G', '(AKQT-,AKJT-,AQJT-)')
+    # myExp = myExp.replace('$2G', '(AKQ9-,AKT9-,AJT9-)')
+    # ##End delete here
+    myExp = myExp.replace('$B', '[A-J]')
+    myExp = myExp.replace('$M', '[T-7]')
+    myExp = myExp.replace('$Z', '[6-2]')
+    myExp = myExp.replace('$L', '[A,2,3,4,5,6,7,8]')
+    myExp = myExp.replace('$N', '[K-9]')
+    myExp = myExp.replace('$F', '[K-J]')  #Same
+    myExp = myExp.replace('$F', '[K-J]')
+    myExp = myExp.replace('$R', '[A-T]')
+    myExp = myExp.replace('$W', '[A,2,3,4,5]')
+    #Also don't want to replace $4bFI type macros
+    
+    #Find commas in between brackets, replace with ;
+    bracketList = re.findall(r'\[.+?\]',myExp)
+    if bracketList:
+        for bracketSet in bracketList:
+            #if there's a comma inside of this bracket set
+            if ',' in bracketSet:
+                #Replace the comma with ; in a temp var
+                replaceVar = bracketSet.replace(',',';')
+                myExp = myExp.replace(bracketSet, replaceVar)
+
+    return myExp
 
 def confirmExpression(exp):
     ##Iterate over expression, if it's not (),!: it's an expression we need to parse
