@@ -3,6 +3,11 @@ import re
 import numpy as np
 import os
 
+# try:
+#     from . import SyntaxValidator as sv
+# except:
+#     import SyntaxValidator as sv
+
 import SyntaxValidator as sv
 
 ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -232,6 +237,11 @@ def expandRange(rangeStr, startMask=None):
         #Take our cardDicts and create a numpy mask
         finalMatchStr = matchCardDicts(cardDictList)
         finalMask = createArray(finalMatchStr,numVars)
+
+
+        if startMask is not None:
+            finalMask = np.logical_and(finalMask,startMask)
+
         return finalMask
 
 
@@ -1099,113 +1109,10 @@ def loadMask(myMacro, startMask):
 
 
 
-################################  RIVER HANDLER ##########################
 
-#Takes in an expression and enumerates all the possible rivers it represents
-# A
-# s
-# As
-# A-5
-# As-5s
-# Ts-
-# Ts+
-def expandRivers(exp):
-    exp = exp.upper()
-    exp = exp.split(",")
-
-    cardIndexes = ['2H','3H','4H','5H','6H','7H','8H','9H','TH','JH','QH','KH','AH',
-                   '2D','3D','4D','5D','6D','7D','8D','9D','TD','JD','QD','KD','AD',
-                   '2C','3C','4C','5C','6C','7C','8C','9C','TC','JC','QC','KC','AC',
-                   '2S','3S','4S','5S','6S','7S','8S','9S','TS','JS','QS','KS','AS']
-    convDict = {'A':13,'K':12,'Q':11,'J':10,'T':9,'9':8,'8':7,'7':6,'6':5,'5':4,'4':3,'3':2,'2':1}
-    bConvDict = {13:'A',12:'K',11:'Q',10:'J',9:'T',8:'9',7:'8',6:'7',5:'6',4:'5',3:'4',2:'3',1:'2'}
-
-    rivList = []
-    #So now we've split it up and we know we have valid syntax, go through each expression and add those values to our list
-    for subExp in exp:
-
-        # A-5
-        # As-5s
-        # Ts-
-        if '-' in subExp:
-            #We want expression to work both ways
-            #A-5 or 5-A both ok
-
-            #So one way to do it would be to evaluate both separately, then take the values in one set but not the other
-            
-            subExpSplit = subExp.split("-")  #['Jc', ''], or ['T', '5']
-
-            highCard = subExpSplit[0]  #Will be 'JC' or 'J'
-            #Look up the first value of this (because it must be a rank)
-            cardVal = convDict[highCard[0]]
-            #Get all the values equal to or greater than this value
-            fullVals = list(range(1,cardVal+1))
-            #Convert ints back to strs
-            strFullVals = [bConvDict[x] for x in fullVals]
-            #Get all the cards which match any of these values
-            matchList = [x for x in cardIndexes if any(y in strFullVals for y in x)]
-            #If we have a suit, restrict match list
-            if len(highCard) == 2:
-                matchList = [x for x in matchList if highCard[1] in x]
-            
-        
-            highCard2 = subExpSplit[1]
-            if len(highCard2) > 0:
-                #Look up the first value of this (because it must be a rank)
-                cardVal = convDict[highCard2[0]]
-                #Get all the values equal to or greater than this value
-                fullVals = list(range(1,cardVal+1))
-                #Convert ints back to strs
-                strFullVals = [bConvDict[x] for x in fullVals]
-                #Get all the cards which match any of these values
-                matchList2 = [x for x in cardIndexes if any(y in strFullVals for y in x)]
-                #If we have a suit, restrict match list
-                if len(highCard2) == 2:
-                    matchList2 = [x for x in matchList if highCard2[1] in x]
-                matchList2 = set(matchList2)
-                matchList = set(matchList)
-                #If we don't reach this point we only have one set of values, so we know we can return matchList
-
-                #If we reach this point we need to to subtract the values in the smaller set from our larger one
-                if len(matchList) > len(matchList2):
-                    matchList = matchList.difference(matchList2)
-                else:
-                    matchList = matchList2.difference(matchList)
-                matchList = list(matchList)
-            
-            rivList += matchList
-
-
-        # Ts+
-        # T+
-        elif '+' in subExp:
-            #Look up the first value of this (because it must be a rank)
-            cardVal = convDict[subExp[:-1]]
-            #Get all the values equal to or greater than this value
-            fullVals = list(range(cardVal,14))
-            #Convert ints back to strs
-            strFullVals = [bConvDict[x] for x in fullVals]
-            #Get all the cards which match any of these values
-            matchList = [x for x in cardIndexes if any(y in strFullVals for y in x)]
-            #If we have a suit, restrict match list
-            if len(subExp[:-1]) == 2:
-                matchList = [x for x in matchList if subExp[1] in x]
-
-            rivList += matchList
-
-        #If no + or -, must be
-        # A
-        # s
-        # As
-        else:
-            rivList += [x for x in cardIndexes if subExp in x]
-
-
-        return list((set(rivList)))
-
-
-
-
+# testVar = "AA"
+# j,k=evaluate(testVar,"AdAcTh")
+# print(len(j))
 
 #testVar = "3%-10%:sJdTh,s4s4h4:RcRs[Tx9x-4x3x]"
 #j,k=evaluate(testVar)
