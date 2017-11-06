@@ -10,11 +10,11 @@ import os
 
 import SyntaxValidator as sv
 
-ploDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ploDir = ploDir + '/PPTParser/'
-RANKEDHUARRAY = np.load(ploDir+'npfiles/pptRankedHUnums.npy')
+PLODIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PLODIR = PLODIR + '/PPTParser/'
+RANKEDHUARRAY = np.load(PLODIR+'npfiles/pptRankedHUnums.npy')
 
-arr = np.load(ploDir+'npfiles/pptSeparateRankSuit.npy')
+ARR = np.load(PLODIR+'npfiles/pptSeparateRankSuit.npy')
 
 
 ALLRANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A']
@@ -208,12 +208,9 @@ def expandRange(rangeStr, startMask=None):
                     suitCards.append((currIndex,suit))
                 currIndex+=1
 
-        #print("SUIT cards",suitCards)
         #Go through and assign suits to our cardDicts
         #suitCards = [(0,"C"),(1,"X"),(2,"X")]
         cardDictList = suitHandling(cardDictList,suitCards)
-
-        #print("SUITS",cardDictList)
 
         #The RONP values do NOT apply to anything in parenthesis, only +-
         #Can handle each chunk separately
@@ -226,18 +223,14 @@ def expandRange(rangeStr, startMask=None):
             elif h[1]=="range":
                 cardDictList = rankHandlingRange(cardDictList,hIndex,h)
             elif h[1]=="plain":
-                #print("PLAIN MATCHED")
                 cardDictList = rankHandlingPlain(cardDictList,hIndex,h)
                 
             #Need to increment our index by number of cards we just covered
             hIndex+=h[0]
-        #print(cardDictList)
-        #raise Exception
 
         #Take our cardDicts and create a numpy mask
         finalMatchStr = matchCardDicts(cardDictList)
         finalMask = createArray(finalMatchStr,numVars)
-
 
         if startMask is not None:
             finalMask = np.logical_and(finalMask,startMask)
@@ -245,16 +238,11 @@ def expandRange(rangeStr, startMask=None):
         return finalMask
 
 
-
-
-def matchCardDicts(cardList=None):
-    #So we can keep it in the same order
-    #For RANGES we need to identify the first value, then can relate others to that
-    #If it's "OR" RANGE, that's a lis
-    # cardList = [{"rank":[("K","==")],"suit":[("D","==")],"rankDependency":None,"suitDependency":None,"commaSeparated":None},
-    #             {"rank":[("A","==")],"suit":None,"rankDependency":None,"suitDependency":None,"commaSeparated":None},
-    #             {"rank":None,"suit":None,"rankDependency":[(0,"==","+1")],"suitDependency":None,"commaSeparated":None},
-    #             ]
+def matchCardDicts(cardList):
+    '''
+    cardList is list of constraints for each card
+    [{'rank': [(13, '==')], 'suit': [(2, '==')], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}, {'rank': [(13, '==')], 'suit': [(3, '==')], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}, {'rank': [(13, '!=')], 'suit': [], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}]
+    '''
 
     finalMatchStr = []
     for cIndex,c in enumerate(cardList):
@@ -267,34 +255,28 @@ def matchCardDicts(cardList=None):
         #(8,<=)
         #And for specific ranges we can have TWO and combine them, <=8 and >=4
         if c["rank"]:
-            rankStr = ["(arr[:,COL{}]{}{})".format(rankIndex,x[1],x[0]) for x in c["rank"]]
+            rankStr = ["(ARR[:,COL{}]{}{})".format(rankIndex,x[1],x[0]) for x in c["rank"]]
             rankStr = " & ".join(rankStr)
             finalMatchStr.append(rankStr)
         #Same as rank, list of tuples of (suit,relation)
         if c["suit"]:
-            suitStr = ["(arr[:,COL{}]{}{})".format(suitIndex,x[1],x[0]) for x in c["suit"]]
+            suitStr = ["(ARR[:,COL{}]{}{})".format(suitIndex,x[1],x[0]) for x in c["suit"]]
             suitStr = " & ".join(suitStr)
             finalMatchStr.append(suitStr)
         #Rank dependency:
         #(0,==,+1)  Index, relation, optional +- value
         #(1,!=,"")
         if c["rankDependency"]:
-            rankDependStr = ["(arr[:,COL{}]{}arr[:,COL{}]{})".format(rankIndex,x[1],x[0]*2,x[2]) for x in c["rankDependency"]]
+            rankDependStr = ["(ARR[:,COL{}]{}ARR[:,COL{}]{})".format(rankIndex,x[1],x[0]*2,x[2]) for x in c["rankDependency"]]
             rankDependStr = " & ".join(rankDependStr)
             finalMatchStr.append(rankDependStr)
-            #currStr = "(arr[:,COL{}]{}arr[:,COL{}]{})".format(indexNum,relation,indexDependency,optionalValue)
-
         #Suit dependency:
         #Will just be equal or !=
         #(1, !=)
         if c["suitDependency"]:
-            #print("SUIT DEPENDENCY",suitIndex,[x for x in c["suitDependency"]])
-
-            suitDependStr = ["(arr[:,COL{}]{}arr[:,COL{}])".format(suitIndex,x[1],x[0]*2+1) for x in c["suitDependency"]]
+            suitDependStr = ["(ARR[:,COL{}]{}ARR[:,COL{}])".format(suitIndex,x[1],x[0]*2+1) for x in c["suitDependency"]]
             suitDependStr = " & ".join(suitDependStr)
             finalMatchStr.append(suitDependStr)
-            #currStr = "(arr[:,COL{}]{}arr[:,COL{}])".format(indexNum,relation,indexDependency)
-
         #Comma separated list of conditions, only works for concrete hands?  No +-
         #This need to be joined grouped together separately with |
         #(A,d),(K,c),(8,"")
@@ -303,11 +285,11 @@ def matchCardDicts(cardList=None):
             for tup in c["commaSeparated"]:
                 #print("TUP",tup)
                 if tup[0] and tup[1]:
-                    currStr = "(arr[:,COL{}]=={}) & (arr[:,COL{}]=={})".format(rankIndex,tup[0],suitIndex,tup[1])
+                    currStr = "(ARR[:,COL{}]=={}) & (ARR[:,COL{}]=={})".format(rankIndex,tup[0],suitIndex,tup[1])
                 elif tup[0]:
-                    currStr = "(arr[:,COL{}]=={})".format(rankIndex,tup[0])
+                    currStr = "(ARR[:,COL{}]=={})".format(rankIndex,tup[0])
                 elif tup[1]:
-                    currStr = "(arr[:,COL{}]=={})".format(suitIndex,tup[1])
+                    currStr = "(ARR[:,COL{}]=={})".format(suitIndex,tup[1])
                 commaDependStr.append(currStr)
             commaDependStr = " | ".join(commaDependStr)
             commaDependStr = "("+commaDependStr+")"
@@ -324,68 +306,67 @@ def matchCardDicts(cardList=None):
 
 
 def createArray(finalMatchStr,cardListLeng):
-    #indexes=[0,1,2,3]
+    '''
+    finalMatchStr is match condition, but with COLNUM indicating relative column indexes
+    ((ARR[:,COL0]==13) & (ARR[:,COL1]==2) & (ARR[:,COL2]==13) & (ARR[:,COL3]==3) & (ARR[:,COL4]!=13))
+    
+    cardListLeng is how many different cards we've specified
+    '''
 
     #If there are no conditions (Such as when hand is 'RW') return mask of all true
     if not finalMatchStr:
         mask = np.ones(270725,dtype='bool')
         return mask
     
+    #Assign our real card indexes over their temporary COL vals
     indexes=[(0,1),(2,3),(4,5),(6,7)]
-    numConditions=cardListLeng
+    replaceList = itertools.permutations(indexes,cardListLeng)
+    #Example with cardListLeng 2 -
+    #[((0, 1), (2, 3)), ((0, 1), (4, 5)), ((0, 1), (6, 7)), ((2, 3), (0, 1)), ((2, 3), 
+    #(4, 5)), ((2, 3), (6, 7)), ((4, 5), (0, 1)), ((4, 5), (2, 3)), ((4, 5), (6, 7)), 
+    #((6, 7), (0, 1)), ((6, 7), (2, 3)), ((6, 7), (4, 5))]
 
-    replaceList = list(itertools.permutations(indexes,numConditions))
-    #[((0, 1), (2, 3)), ((0, 1), (4, 5)), ((0, 1), (6, 7)), ((2, 3), (0, 1)), ((2, 3), (4, 5)), ((2, 3), (6, 7)), ((4, 5), (0, 1)), ((4, 5), (2, 3)), ((4, 5), (6, 7)), ((6, 7), (0, 1)), ((6, 7), (2, 3)), ((6, 7), (4, 5))]
-
-    #finalMatchStr = "((arr[:,COL0]>=8) & (arr[:,COL1]==arr[:,COL0]+1))"
-    # finalMatchStr = " & ".join([matchStr])
     conditions = []
     for replaceIndexTuple in replaceList:
         #(1,2)
         newStr = finalMatchStr  #Create a copy of our str to overwrite
-        for ind in range(numConditions):
+        for ind in range(cardListLeng):
             rankInd = ind*2
             suitInd = ind*2+1
 
             newStr = newStr.replace("COL"+str(rankInd),str(replaceIndexTuple[ind][0])).replace("COL"+str(suitInd),str(replaceIndexTuple[ind][1]))
 
         conditions.append(newStr)
-        #print("NEW",newStr)
+
+    #Each individual condition combined
     finalSearch = " | ".join(conditions)
-    #[matchStr.replace("VAL"+str(ind),str(replaceIndexTuple[ind])) for ind in range(numConditions)]
+    #((ARR[:,0]==13) & (ARR[:,1]==2) & (ARR[:,2]==13) & (ARR[:,3]==3) & (ARR[:,4]!=13)) 
+    # | ((ARR[:,0]==13) & (ARR[:,1]==2) & (ARR[:,2]==13) & (ARR[:,3]==3) & (ARR[:,6]!=13))...
 
-
-
-    f = "mask = "+finalSearch
-    #print("EXEC F",f)
-
-    
-
-    #Would be good to have some kind of check here
-    #exec(f)
-    #exec("mask2 = ((arr[:,1]!=2)) | ((arr[:,3]!=2)) | ((arr[:,5]!=2)) | ((arr[:,7]!=2))")
-    
+    #Impossible to get here without crashing with anything malicious, so don't worry about check?
     mask = eval(finalSearch)
-    #print("SHAPE",mask.shape)
-    # try:
-    #     print("MASK SHAPE",mask.shape)
-    # except:
-    #     print("No mask")
-    # print("MASK2 shape",mask2.shape)
+
     return mask
 
 
 
 def rankHandlingComma(cardDictList,hIndex,h):
-    #hIndex is the index of the first card being passed here
-    #h is the list of cards in tuple form, second is the type
+    '''
+    cardDictList is the dict we want to write our info to
+    [{'rank': [], 'suit': [], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}]
+    
+    hIndex is current index in cardDictList we're writing to
 
-    #h is a TUPLE
+    h is info about these values
+    (1, 'comma', ['A?', 'K?', 'Q?'])
+    '''
+
     numValues = h[0]
-    hDesc = h[1]  #comma, plus, minus, range, plain
+    #hDesc = h[1]  #comma, plus, minus, range, plain
     hValues = h[2]  #LISTS if comma or range, otherwise a string
 
     allCommaList = []
+
     #We will have a LIST of len(2) strings
     for card in hValues:
         #print("CARD",card)
@@ -400,17 +381,23 @@ def rankHandlingComma(cardDictList,hIndex,h):
         if suit in ALLSUITS:
             el2=ALLSUITS.index(suit)+1
         tup = (el1,el2)
-        #print("TUP",tup)
+
         allCommaList.append(tup)
-    #print("COMMAS",allCommaList)
+
     cardDictList[int(hIndex)]["commaSeparated"]=allCommaList
 
     return cardDictList
 
 def rankHandlingPlusMinus(cardDictList,hIndex,h):
+    '''
+    cardDictList is the dict we want to write our info to
+    [{'rank': [], 'suit': [], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}]
+    
+    hIndex is current index in cardDictList we're writing to
 
-    #hIndex is the index of the first card being passed here
-    #h is the list of cards in tuple form, second is the type
+    h is info about these values
+    (1.0, 'plus', 'J?')
+    '''
 
     #h is a TUPLE
     numValues = h[0]
@@ -451,16 +438,20 @@ def rankHandlingPlusMinus(cardDictList,hIndex,h):
     return cardDictList
 
 def rankHandlingRange(cardDictList,hIndex,h):
-    #hIndex is the index of the first card being passed here
-    #h is the list of cards in tuple form, second is the type
+    '''
+    cardDictList is the dict we want to write our info to
+    [{'rank': [], 'suit': [], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}]
+    
+    hIndex is current index in cardDictList we're writing to
+
+    h is info about these values
+    (1.0, 'range', ['J?', '8?'])
+    '''
 
     #h is a TUPLE
     numValues = h[0]
-    hDesc = h[1]  #comma, plus, minus, range, plain
+    #hDesc = h[1]  #comma, plus, minus, range, plain
     hValues = h[2]  #LISTS if comma or range, otherwise a string
-
-
-    #Will be a LIST of two strings, [A?K?,5?4?] OR [A?K?,A?5?]
 
     #Since we've already handled the ranks we have to be sure we retain the order
 
@@ -472,8 +463,6 @@ def rankHandlingRange(cardDictList,hIndex,h):
             sameRankTuples.append((int(i/2),hValues[0][i]))
         else:
             changeRankTuples.append((int(i/2),hValues[0][i],hValues[1][i]))
-
-    #print("SAME RANK VS CHANGE RANK",sameRankTuples,changeRankTuples)
 
     #Assign specific values for sameRank cards
     for rankTup in sameRankTuples:
@@ -495,7 +484,6 @@ def rankHandlingRange(cardDictList,hIndex,h):
         geOrder = (">=","<=")
 
     #Convert to our real card index
-    #print("CHANGE RANK TUPLES",changeRankTuples,changeRankTuples[0][0])
     baselineCardIndex = int(changeRankTuples[0][0] + hIndex)
     cardDictList[baselineCardIndex]["rank"]=[(baselineRank,geOrder[0]),(baselineRank2,geOrder[1])]
 
@@ -505,17 +493,12 @@ def rankHandlingRange(cardDictList,hIndex,h):
         cardIndex = int(rankTup[0] + hIndex)
         cardRank = ALLRANKS.index(rankTup[1])+1
 
-        #print("CARD RAN, BASELINE RANK",cardRank,"#",baselineRank)
         relative = cardRank - baselineRank
-        #print("RELATIVE",type(relative))
         if relative==0:
-            #print("EQUAL")
             relativeStr = ""
         elif relative>0:
-            #print(">0")
             relativeStr="+{}".format(relative)
         else:
-            #print("ELSE")
             relativeStr = str(relative)
 
         cardDictList[cardIndex]["rankDependency"] = cardDictList[cardIndex]["rankDependency"] + [(baselineCardIndex,"==",relativeStr)]
@@ -525,13 +508,22 @@ def rankHandlingRange(cardDictList,hIndex,h):
 
 
 def rankHandlingPlain(cardDictList,hIndex,h):
+    '''
+    cardDictList is the dict we want to write our info to
+    [{'rank': [], 'suit': [], 'rankDependency': [], 'suitDependency': [], 'commaSeparated': []}]
+    
+    hIndex is current index in cardDictList we're writing to
+
+    h is info about these values
+    (1.0, 'plain', 'JC')
+    '''
+
     #hIndex is the index of the first card being passed here
     #h is the list of cards in tuple form, second is the type
 
     #h is a TUPLE
     numValues = h[0]
-    hDesc = h[1]  #comma, plus, minus, range, plain
-    hValues = h[2]  #LISTS if comma or range, otherwise a string
+    hValues = h[2]
 
     #This will be a STRING, AcKh or R?R?K
     #Handling should be similar to suits, match up the vars
@@ -950,8 +942,8 @@ def pctHandler(r, startMask):
     pctMask = np.zeros(270725,dtype='bool')
 
     if '6H' in r:
-        #parMask = np.load(ploDir+'/npfiles/'+myPattern+'.npy')
-        orderedList = np.load(ploDir+'npfiles/pptRanked6maxMap.npy')
+        #parMask = np.load(PLODIR+'/npfiles/'+myPattern+'.npy')
+        orderedList = np.load(PLODIR+'npfiles/pptRanked6maxMap.npy')
         sIndexes = [0, 2700, 5400, 8118, 10818, 13536, 16224, 18948, 21648, 
                     24344, 27072, 29772, 32486, 35188, 37900, 40608, 43308, 
                     46008, 48726, 51416, 54140, 56842, 59558, 62266, 64960, 
@@ -1052,7 +1044,7 @@ def loadMask(myMacro, startMask):
     #                  '$3B4O','$3B6I','$3B6O','$3B8I','$3B8O','$4B2','$4B3','$4B4','$4B5','$4B6','$FI12','$FI15',
     #                  '$FI20','$FI25','$FI30','$FI40','$FI50']
 
-    myMask = np.load(ploDir+'npfiles/'+myMacro+'.npy')
+    myMask = np.load(PLODIR+'npfiles/'+myMacro+'.npy')
 
     if startMask is not None:
         return np.logical_and(myMask,startMask)
@@ -1110,9 +1102,9 @@ def loadMask(myMacro, startMask):
 
 
 
-# testVar = "AA"
-# j,k=evaluate(testVar,"AdAcTh")
-# print(len(j))
+testVar = "Jc"
+j,k=evaluate(testVar)
+print(len(j))
 
 #testVar = "3%-10%:sJdTh,s4s4h4:RcRs[Tx9x-4x3x]"
 #j,k=evaluate(testVar)
